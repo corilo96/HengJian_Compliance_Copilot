@@ -25,7 +25,8 @@ with `COMPLIANCE_API_TOKENS='…' python -m compliance_copilot`. The service
 listens on `127.0.0.1:8000`; set `COMPLIANCE_HOST`, `COMPLIANCE_PORT`, and
 `COMPLIANCE_DB` to configure the bind address and SQLite database path.
 
-All endpoints except `/health` require `Authorization: ******
+All endpoints except `/health` require the configured token in an HTTP bearer
+authorization header.
 
 * `POST /documents` (requires `manage_documents`) stores a document in the
   caller's tenant. Required JSON fields: `document_id`, `title`, `standard`,

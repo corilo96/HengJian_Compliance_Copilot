@@ -38,7 +38,9 @@ class ComplianceServiceTests(unittest.TestCase):
         self.assertEqual(events[0]["query"], "concrete strength")
         self.assertEqual(events[0]["citations"][0]["document_id"], "GB-123")
         self.assertEqual(self.service.query(self.lab_b, "concrete")["citations"], [])
-        self.assertEqual(self.service.audit_events(self.lab_b), [])
+        lab_b_events = self.service.audit_events(self.lab_b)
+        self.assertEqual(len(lab_b_events), 1)
+        self.assertEqual(lab_b_events[0]["citations"], [])
 
     def test_permission_is_required(self):
         viewer = Principal("viewer", "lab-a", frozenset())
@@ -51,25 +53,25 @@ class ComplianceServiceTests(unittest.TestCase):
             {"lab-a-token": {"user_id": "reviewer-a", "tenant_id": "lab-a",
                              "permissions": ["query", "view_audit"]}},
         )
-        status, payload = self._request(app, "POST", "/query", "******",
+        status, payload = self._request(app, "POST", "/query", "lab-a-token",
                                         {"query": "concrete"})
         self.assertTrue(status.startswith("200"))
         self.assertEqual(payload["citations"][0]["document_id"], "GB-123")
 
-        status, _ = self._request(app, "POST", "/documents", "******",
+        status, _ = self._request(app, "POST", "/documents", "lab-a-token",
                                   self.document)
         self.assertTrue(status.startswith("403"))
-        status, _ = self._request(app, "GET", "/audit", "******", None)
+        status, _ = self._request(app, "GET", "/audit", "", None)
         self.assertTrue(status.startswith("401"))
 
     @staticmethod
-    def _request(app, method, path, authorization, payload):
+    def _request(app, method, path, token, payload):
         body = json.dumps(payload).encode() if payload is not None else b""
         environ = {
             "REQUEST_METHOD": method,
             "PATH_INFO": path,
             "CONTENT_LENGTH": str(len(body)),
-            "HTTP_AUTHORIZATION": authorization,
+            "HTTP_AUTHORIZATION": " ".join(("Bearer", token)) if token else "",
             "wsgi.input": BytesIO(body),
         }
         captured = {}

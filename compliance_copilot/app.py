@@ -2,7 +2,6 @@ import hmac
 import json
 import os
 from http import HTTPStatus
-from urllib.parse import parse_qs
 
 from compliance_copilot.service import AccessDenied, ComplianceService, Principal
 
